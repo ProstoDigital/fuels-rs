@@ -52,7 +52,7 @@ fuel-core-types = { version = "0.18.2", default-features = false }
 fuel-crypto = "0.31.1"
 fuel-merkle = "0.31.1"
 fuel-storage = "0.31.1"
-fuel-tx = "0.31.1"
+fuel-tx = { version = "0.31.1", default-features = false }
 fuel-types = { version = "0.31.1", default-features = false }
 fuel-vm = "0.31.2"
 fuels = { version = "0.43.0", path = "./packages/fuels" }

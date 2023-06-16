@@ -17,7 +17,7 @@ fuel-asm = { workspace = true }
 fuel-core = { workspace = true, default-features = false, optional = true }
 fuel-core-chain-config = { workspace = true }
 fuel-core-client = { workspace = true, optional = true }
-fuel-tx = { workspace = true }
+fuel-tx = { workspace = true, default-features=false }
 fuel-types = { workspace = true, features = ["default"] }
 fuel-vm = { workspace = true }
 fuels-macros = { workspace = true }

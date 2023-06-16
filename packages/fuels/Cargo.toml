@@ -12,7 +12,7 @@ description = "Fuel Rust SDK."
 [dependencies]
 fuel-core = { workspace = true, default-features = false, optional = true }
 fuel-core-client = { workspace = true, optional = true }
-fuel-tx = { workspace = true }
+fuel-tx = { workspace = true, default-features=false }
 fuels-accounts = { workspace = true, optional = true }
 fuels-core = { workspace = true }
 fuels-macros = { workspace = true }
