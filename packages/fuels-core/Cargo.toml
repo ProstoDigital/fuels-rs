@@ -19,7 +19,7 @@ fuel-core-chain-config = { workspace = true }
 fuel-core-client = { workspace = true, optional = true }
 fuel-tx = { workspace = true, default-features=false }
 fuel-types = { workspace = true, features = ["default"] }
-fuel-vm = { workspace = true }
+fuel-vm = { workspace = true, default-features = false }
 fuels-macros = { workspace = true }
 hex = { workspace = true, features = ["std"] }
 itertools = { workspace = true }

@@ -54,7 +54,7 @@ fuel-merkle = "0.31.1"
 fuel-storage = "0.31.1"
 fuel-tx = { version = "0.31.1", default-features = false }
 fuel-types = { version = "0.31.1", default-features = false }
-fuel-vm = "0.31.2"
+fuel-vm = { version = "0.31.2", default-features = false }
 fuels = { version = "0.43.0", path = "./packages/fuels" }
 fuels-accounts = { version = "0.43.0", path = "./packages/fuels-accounts", default-features = false }
 fuels-code-gen = { version = "0.43.0", path = "./packages/fuels-code-gen", default-features = false }

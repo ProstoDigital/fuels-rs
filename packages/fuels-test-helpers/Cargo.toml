@@ -16,7 +16,7 @@ fuel-core-client = { workspace = true }
 fuel-core-types = { workspace = true }
 fuel-tx = { workspace = true }
 fuel-types = { workspace = true, features = ["random"] }
-fuel-vm = { workspace = true }
+fuel-vm = { workspace = true, default-features = false }
 fuels-accounts = { workspace = true, optional = true }
 fuels-core = { workspace = true }
 futures = { workspace = true }
