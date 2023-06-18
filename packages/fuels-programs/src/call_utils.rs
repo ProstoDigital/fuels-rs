@@ -1,8 +1,8 @@
 use std::{collections::HashSet, iter, vec};
 
+use fuel_asm::{op, RegId};
 use fuel_tx::{AssetId, Bytes32, ContractId, Output, TxPointer, UtxoId};
 use fuel_types::Word;
-use fuel_vm::fuel_asm::{op, RegId};
 use fuels_accounts::Account;
 use fuels_core::{
     constants::WORD_SIZE,
