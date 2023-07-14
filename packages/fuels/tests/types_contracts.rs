@@ -1,5 +1,6 @@
 use std::{result::Result as StdResult, str::FromStr};
 
+use fuel_tx::Receipt;
 use fuels::{
     prelude::*,
     types::{Bits256, EvmAddress, Identity, SizedAsciiString, B512, U256},
@@ -1925,8 +1926,8 @@ async fn test_bytes_as_input() -> Result<()> {
 
 #[tokio::test]
 async fn test_contract_raw_slice() -> Result<()> {
-    let wallet = launch_provider_and_get_wallet().await;
     setup_program_test!(
+        Wallets("wallet"),
         Abigen(Contract(
             name = "RawSliceContract",
             project = "packages/fuels/tests/types/contracts/raw_slice"
@@ -1964,6 +1965,46 @@ async fn test_contract_raw_slice() -> Result<()> {
             .call()
             .await?;
     }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_contract_nested_vector() -> Result<()> {
+    setup_program_test!(
+        Wallets("wallet"),
+        Abigen(Contract(
+            name = "MyContract",
+            project = "packages/fuels/tests/types/contracts/nested_vectors"
+        )),
+        Deploy(
+            name = "contract_instance",
+            contract = "MyContract",
+            wallet = "wallet"
+        ),
+    );
+
+    let contract_methods = contract_instance.methods();
+
+    let tx = contract_methods.nested_vec().build_tx().await.unwrap();
+
+    let receipts = wallet
+        .provider()
+        .unwrap()
+        .send_transaction(&tx)
+        .await
+        .unwrap()
+        .iter()
+        .find_map(|r| {
+            if let Receipt::ReturnData { data, .. } = r {
+                Some(data.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap();
+
+    dbg!(&receipts);
 
     Ok(())
 }
