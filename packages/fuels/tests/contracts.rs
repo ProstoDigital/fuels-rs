@@ -10,6 +10,45 @@ use fuels::{
 };
 use fuels_core::codec::DecoderConfig;
 
+use fuel_tx::Transaction as FuelTransaction;
+ use fuels::accounts::fuel_crypto::fuel_types::canonical::Serialize;
+
+#[tokio::test]
+async fn test_sergio() -> Result<()> {
+    setup_program_test!(
+        Wallets("wallet"),
+        Abigen(Contract(
+            name = "TestContract",
+            project = "packages/fuels/tests/contracts/contract_test_sergio"
+        )),
+        Deploy(
+            name = "contract_instance",
+            contract = "TestContract",
+            wallet = "wallet"
+        ),
+    );
+
+    let amount = 15;
+
+    let contract_methods = contract_instance.methods();
+    let call_handler = contract_methods.increment_count(amount);
+    let tx = call_handler.build_tx().await?;
+    dbg!(&tx);
+
+    let ftx: FuelTransaction = tx.clone().into();
+    dbg!(ftx.to_bytes());
+
+    let provider = wallet.try_provider()?;
+    let tx_id = provider.send_transaction(tx).await?;
+    let tx_status = provider.tx_status(&tx_id).await?;
+
+    let response = call_handler.get_response_from(tx_status)?;
+
+    assert_eq!(response.value, amount);
+
+    Ok(())
+}
+
 #[tokio::test]
 async fn test_multiple_args() -> Result<()> {
     setup_program_test!(

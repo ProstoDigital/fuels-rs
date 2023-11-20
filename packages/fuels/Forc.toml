@@ -11,6 +11,7 @@ members = [
   'tests/contracts/block_timestamp',
   'tests/contracts/configurables',
   'tests/contracts/contract_test',
+  'tests/contracts/contract_test_sergio',
   'tests/contracts/contract_witness_logs',
   'tests/contracts/large_return_data',
   'tests/contracts/lib_contract',
