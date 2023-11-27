@@ -14,7 +14,7 @@ async-trait = { workspace = true, default-features = false }
 chrono = { workspace = true }
 elliptic-curve = { workspace = true, default-features = false }
 eth-keystore =  { workspace = true, optional = true }
-fuel-core = { workspace = true }
+fuel-core = { workspace = true, default-features = false }
 fuel-crypto = { workspace = true, features = ["random"] }
 fuel-tx = { workspace = true }
 fuel-types = { workspace = true, features = ["random"] }
