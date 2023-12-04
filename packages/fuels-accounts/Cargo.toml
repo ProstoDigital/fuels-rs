@@ -14,7 +14,7 @@ async-trait = { workspace = true, default-features = false }
 chrono = { workspace = true }
 elliptic-curve = { workspace = true, default-features = false }
 eth-keystore =  { workspace = true, optional = true }
-fuel-core = { workspace = true, default-features = false }
+fuel-core = { workspace = true, default-features = false, optional = true }
 fuel-crypto = { workspace = true, features = ["random"] }
 fuel-tx = { workspace = true }
 fuel-types = { workspace = true, features = ["random"] }
@@ -37,4 +37,4 @@ tokio = { workspace = true, features = ["test-util"]}
 [features]
 default = ["std"]
 coin-cache = ["tokio?/time"]
-std = ["fuels-core/std", "dep:tokio", "fuel-core-client/default", "dep:eth-keystore"]
+std = ["fuels-core/std", "dep:tokio", "fuel-core-client/default", "dep:fuel-core", "dep:eth-keystore"]

@@ -14,7 +14,7 @@ description = "Fuel Rust SDK."
 ignored = ["fuel-core"]
 
 [dependencies]
-fuel-core = { workspace = true, default-features = false, optional = true }
+fuel-core = { workspace = true, default-features = false }
 fuel-core-client = { workspace = true, optional = true }
 fuel-tx = { workspace = true }
 fuels-accounts = { workspace = true, default-features = false }
@@ -42,7 +42,6 @@ coin-cache = ["fuels-accounts/coin-cache"]
 # such they are only available if `std` is enabled. The `dep:` syntax was
 # used so that we don't get a new feature flag for every optional dependency.
 std = [
-  "dep:fuel-core",
   "dep:fuel-core-client",
   "dep:fuels-programs",
   "dep:fuels-test-helpers",
