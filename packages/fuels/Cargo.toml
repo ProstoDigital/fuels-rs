@@ -25,7 +25,7 @@ fuels-test-helpers = { workspace = true, optional = true }
 
 [dev-dependencies]
 chrono = { workspace = true }
-fuel-core = { workspace = true, default-features = false }
+fuel-core = { workspace = true, default-features = false, optional = true }
 fuel-core-types = { workspace = true }
 fuels-code-gen = { workspace = true }
 fuels-test-helpers = { workspace = true }
@@ -43,6 +43,7 @@ coin-cache = ["fuels-accounts/coin-cache"]
 # such they are only available if `std` is enabled. The `dep:` syntax was
 # used so that we don't get a new feature flag for every optional dependency.
 std = [
+  "dep:fuel-core",
   "dep:fuel-core-client",
   "dep:fuels-programs",
   "dep:fuels-test-helpers",
