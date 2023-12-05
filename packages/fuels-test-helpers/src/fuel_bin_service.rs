@@ -1,13 +1,16 @@
-use std::{net::SocketAddr, path::PathBuf, time::Duration};
+use std::{fs::File, net::SocketAddr, path::PathBuf, time::Duration};
 
+use fuel_core_chain_config::{CoinConfig, MessageConfig};
 use fuel_core_client::client::FuelClient;
 use fuel_core_services::State;
+use fuel_types::{AssetId, Bytes32};
 use fuels_core::{
     error,
     types::errors::{Error, Result as FuelResult},
 };
 use portpicker::{is_free, pick_unused_port};
-use tempfile::NamedTempFile;
+use serde::{Deserialize, Serialize};
+use tempfile::TempDir;
 use tokio::{process::Command, spawn, task::JoinHandle, time::sleep};
 
 use crate::node_types::{Config, DbType, Trigger};
@@ -15,7 +18,7 @@ use crate::node_types::{Config, DbType, Trigger};
 #[derive(Debug)]
 struct ExtendedConfig {
     config: Config,
-    config_file: NamedTempFile,
+    genesis_config: TempDir,
 }
 
 impl ExtendedConfig {
@@ -29,11 +32,11 @@ impl ExtendedConfig {
             "127.0.0.1".to_string(),
             "--port".to_string(),
             port,
-            "--chain".to_string(),
-            self.config_file
+            "--genesis-config".to_string(),
+            self.genesis_config
                 .path()
                 .to_str()
-                .expect("Failed to find config file")
+                .expect("temporary genesis config to be a at a valid path")
                 .to_string(),
         ];
 
@@ -104,10 +107,92 @@ impl ExtendedConfig {
     }
 
     pub fn write_temp_chain_config_file(&mut self) -> FuelResult<()> {
-        Ok(serde_json::to_writer(
-            &mut self.config_file,
-            &self.config.chain_conf,
-        )?)
+        let mut value = serde_json::to_value(&self.config.chain_conf)?;
+        value.as_object_mut().unwrap().remove("initial_state");
+
+        let chain_config = self.genesis_config.path().join("chain_config.json");
+        let file = File::create(chain_config)?;
+        serde_json::to_writer(file, &value)?;
+
+        // let state = self
+        //     .config
+        //     .chain_conf
+        //     .initial_state
+        //     .clone()
+        //     .unwrap_or_default();
+
+        #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+        struct ContractStateConfig {
+            contract_id: Bytes32,
+            key: Bytes32,
+            value: Bytes32,
+        }
+
+        #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+        struct ContractBalanceConfig {
+            contract_id: Bytes32,
+            asset_id: AssetId,
+            amount: u64,
+        }
+
+        #[derive(Serialize, Deserialize, Debug, Clone)]
+        struct StateConfig {
+            messages: Vec<MessageConfig>,
+            coins: Vec<CoinConfig>,
+        }
+
+        // let contract_state: Vec<ContractStateConfig> =
+        //     state
+        //         .contracts
+        //         .iter()
+        //         .flatten()
+        //         .flat_map(|contract| {
+        //             let contract_id = Bytes32::from(*contract.contract_id);
+        //             contract.state.clone().unwrap_or_default().into_iter().map(
+        //                 move |(key, value)| ContractStateConfig {
+        //                     contract_id,
+        //                     key,
+        //                     value,
+        //                 },
+        //             )
+        //         })
+        //         .collect();
+        //
+        // let contract_balance: Vec<ContractBalanceConfig> = state
+        //     .contracts
+        //     .iter()
+        //     .flatten()
+        //     .flat_map(|contract| {
+        //         let contract_id = Bytes32::from(*contract.contract_id);
+        //         contract
+        //             .balances
+        //             .clone()
+        //             .unwrap_or_default()
+        //             .into_iter()
+        //             .map(move |(asset_id, amount)| ContractBalanceConfig {
+        //                 contract_id,
+        //                 asset_id,
+        //                 amount,
+        //             })
+        //     })
+        //     .collect();
+
+        let state = self
+            .config
+            .chain_conf
+            .initial_state
+            .clone()
+            .unwrap_or_default();
+        let coins = state.coins.clone().unwrap_or_default();
+        let messages = state.messages.clone().unwrap_or_default();
+
+        let state_config = StateConfig { messages, coins };
+
+        let state_config_path = self.genesis_config.path().join("state_config.json");
+        let file = File::create(state_config_path)?;
+        serde_json::to_writer(file, &state_config)?;
+
+        Ok(())
     }
 }
 
@@ -133,7 +218,7 @@ impl FuelService {
 
         let extended_config = ExtendedConfig {
             config,
-            config_file: NamedTempFile::new()?,
+            genesis_config: TempDir::new()?,
         };
 
         let addr = extended_config.config.addr;
