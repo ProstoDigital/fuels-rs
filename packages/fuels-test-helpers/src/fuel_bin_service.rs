@@ -135,10 +135,13 @@ impl ExtendedConfig {
             amount: u64,
         }
 
-        #[derive(Serialize, Deserialize, Debug, Clone)]
+        #[derive(Serialize, Deserialize, Debug, Clone, Default)]
         struct StateConfig {
             messages: Vec<MessageConfig>,
             coins: Vec<CoinConfig>,
+            contracts: Vec<u64>,
+            contract_balance: Vec<u64>,
+            contract_state: Vec<u64>,
         }
 
         // let contract_state: Vec<ContractStateConfig> =
@@ -186,7 +189,11 @@ impl ExtendedConfig {
         let coins = state.coins.clone().unwrap_or_default();
         let messages = state.messages.clone().unwrap_or_default();
 
-        let state_config = StateConfig { messages, coins };
+        let state_config = StateConfig {
+            messages,
+            coins,
+            ..Default::default()
+        };
 
         let state_config_path = self.genesis_config.path().join("state_config.json");
         let file = File::create(state_config_path)?;
