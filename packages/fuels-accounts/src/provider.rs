@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug, io, net::SocketAddr};
 
 mod retry_util;
 mod retryable_client;
-#[cfg(feature = "std")]
+#[cfg(feature = "fuel-core-lib")]
 mod supported_versions;
 
 #[cfg(feature = "coin-cache")]
@@ -41,7 +41,7 @@ use fuels_core::{
     },
 };
 pub use retry_util::{Backoff, RetryConfig};
-#[cfg(feature = "std")]
+#[cfg(feature = "fuel-core-lib")]
 use supported_versions::{check_fuel_core_version_compatibility, VersionCompatibility};
 use tai64::Tai64;
 use thiserror::Error;
@@ -291,13 +291,13 @@ impl Provider {
         let node_info = self.node_info().await?;
         let chain_info = self.chain_info().await?;
 
-        #[cfg(feature = "std")]
+        #[cfg(feature = "fuel-core-lib")]
         Self::ensure_client_version_is_supported(&node_info)?;
 
         Ok(NetworkInfo::new(node_info, chain_info))
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "fuel-core-lib")]
     fn ensure_client_version_is_supported(node_info: &NodeInfo) -> ProviderResult<()> {
         let node_version = node_info.node_version.parse::<semver::Version>()?;
         let VersionCompatibility {
