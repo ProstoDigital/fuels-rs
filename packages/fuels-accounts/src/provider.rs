@@ -35,7 +35,7 @@ use fuels_core::{
         message_proof::MessageProof,
         node_info::NodeInfo,
         transaction::Transaction,
-        transaction_builders::{DryRunner, NetworkInfo},
+        transaction_builders::DryRunner,
         transaction_response::TransactionResponse,
         tx_status::TxStatus,
     },
@@ -169,17 +169,6 @@ pub struct Provider {
 }
 
 impl Provider {
-    pub fn new(url: impl AsRef<str>, consensus_parameters: ConsensusParameters) -> Result<Self> {
-        let client = RetryableClient::new(&url, Default::default())?;
-
-        Ok(Self {
-            client,
-            consensus_parameters,
-            #[cfg(feature = "coin-cache")]
-            cache: Default::default(),
-        })
-    }
-
     pub async fn from(addr: impl Into<SocketAddr>) -> Result<Self> {
         let addr = addr.into();
         Self::connect(format!("http://{addr}")).await
@@ -194,12 +183,44 @@ impl Provider {
         let client = RetryableClient::new(&url, Default::default())?;
         let consensus_parameters = client.chain_info().await?.consensus_parameters;
 
+        #[cfg(feature = "fuel-core-lib")]
+        {
+            let node_info = client.node_info().await?.into();
+            Self::ensure_client_version_is_supported(&node_info)?;
+        }
+
         Ok(Self {
             client,
             consensus_parameters,
             #[cfg(feature = "coin-cache")]
             cache: Default::default(),
         })
+    }
+
+    #[cfg(feature = "fuel-core-lib")]
+    fn ensure_client_version_is_supported(node_info: &NodeInfo) -> ProviderResult<()> {
+        let node_version = node_info.node_version.parse::<semver::Version>()?;
+        let VersionCompatibility {
+            supported_version,
+            is_major_supported,
+            is_minor_supported,
+            is_patch_supported,
+        } = check_fuel_core_version_compatibility(node_version.clone());
+
+        if !is_major_supported || !is_minor_supported {
+            return Err(ProviderError::UnsupportedFuelClientVersion {
+                current: node_version,
+                supported: supported_version,
+            });
+        } else if !is_patch_supported {
+            tracing::warn!(
+                fuel_client_version = %node_version,
+                supported_version = %supported_version,
+                "The patch versions of the client and SDK differ.",
+            );
+        };
+
+        Ok(())
     }
 
     pub fn url(&self) -> &str {
@@ -285,42 +306,6 @@ impl Provider {
 
     pub fn consensus_parameters(&self) -> &ConsensusParameters {
         &self.consensus_parameters
-    }
-
-    pub async fn network_info(&self) -> ProviderResult<NetworkInfo> {
-        let node_info = self.node_info().await?;
-        let chain_info = self.chain_info().await?;
-
-        #[cfg(feature = "fuel-core-lib")]
-        Self::ensure_client_version_is_supported(&node_info)?;
-
-        Ok(NetworkInfo::new(node_info, chain_info))
-    }
-
-    #[cfg(feature = "fuel-core-lib")]
-    fn ensure_client_version_is_supported(node_info: &NodeInfo) -> ProviderResult<()> {
-        let node_version = node_info.node_version.parse::<semver::Version>()?;
-        let VersionCompatibility {
-            supported_version,
-            is_major_supported,
-            is_minor_supported,
-            is_patch_supported,
-        } = check_fuel_core_version_compatibility(node_version.clone());
-
-        if !is_major_supported || !is_minor_supported {
-            return Err(ProviderError::UnsupportedFuelClientVersion {
-                current: node_version,
-                supported: supported_version,
-            });
-        } else if !is_patch_supported {
-            tracing::warn!(
-                fuel_client_version = %node_version,
-                supported_version = %supported_version,
-                "The patch versions of the client and SDK differ.",
-            );
-        };
-
-        Ok(())
     }
 
     pub fn chain_id(&self) -> ChainId {
@@ -742,5 +727,16 @@ impl DryRunner for Provider {
         let receipts = self.client.dry_run_opt(&tx, Some(false)).await?;
         let gas_used = self.get_gas_used(&receipts);
         Ok((gas_used as f64 * (1.0 + tolerance as f64)) as u64)
+    }
+
+    async fn min_gas_price(&self) -> Result<u64> {
+        self.node_info()
+            .await
+            .map(|ni| ni.min_gas_price)
+            .map_err(Into::into)
+    }
+
+    fn consensus_parameters(&self) -> &ConsensusParameters {
+        self.consensus_parameters()
     }
 }
