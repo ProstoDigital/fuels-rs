@@ -11,7 +11,7 @@ Rust SDK for Fuel. It can be used for a variety of things, including but not lim
 - Launching a local Fuel network;
 - Crafting and signing transactions with hand-crafted scripts or contract calls;
 - Generating type-safe Rust bindings of contract methods;
-- And more, `fuels-rs` is still in active development.
+- And more, `fuels-rs` is still in active development
 
 ## Documentation
 
